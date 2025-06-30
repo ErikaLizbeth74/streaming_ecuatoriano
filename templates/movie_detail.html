@@ -1,0 +1,94 @@
+{{define "title"}}Detalles de la Película{{end}}
+
+{{define "content"}}
+<section class="section animated-content">
+    <div id="movie-detail-content" class="box" style="background-color: #EFEBE9; border-color: #D7CCC8;">
+        <p class="has-text-grey has-text-centered">Cargando detalles de la película...</p>
+    </div>
+</section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const movieId = urlParams.get('id');
+        const detailContainer = document.getElementById('movie-detail-content');
+
+        if (!movieId) {
+            detailContainer.innerHTML = '<p class="has-text-danger has-text-centered">No se especificó un ID de película.</p>';
+            return;
+        }
+
+        fetch(`/api/peliculas/${movieId}`)
+            .then(response => response.json())
+            .then(movie => {
+                if (movie.message === "Película no encontrada" || movie.error) {
+                    detailContainer.innerHTML = `<p class="has-text-danger has-text-centered">Película con ID ${movieId} no encontrada.</p>`;
+                    return;
+                }
+
+                detailContainer.innerHTML = `
+                    <div class="columns is-vcentered is-multiline">
+                        <div class="column is-one-third-desktop is-half-tablet is-full-mobile has-text-centered">
+                            <figure class="image is-3by4">
+                                <img src="${movie.image_url}" alt="${movie.title}" class="is-rounded-8">
+                            </figure>
+                        </div>
+                        <div class="column is-two-thirds-desktop is-half-tablet is-full-mobile">
+                            <h2 class="title is-2" style="color: #6D4C41;">${movie.title}</h2>
+                            <p class="subtitle is-5" style="color: #4E342E;">
+                                <strong>Género:</strong> ${movie.genre}<br>
+                                <strong>Año:</strong> ${movie.year}<br>
+                                <strong>Duración:</strong> ${movie.length} minutos
+                            </p>
+                            <p class="is-size-5 has-text-weight-bold ${movie.is_free ? 'has-text-success' : 'has-text-warning'}">
+                                ${movie.is_free ? 'Acceso Gratuito' : 'Contenido Premium (Necesita alquiler)'}
+                            </p>
+                            <div class="buttons mt-5">
+                                <button class="button is-danger is-large" onclick="watchMovie(${movie.id}, '${movie.video_url}', ${movie.is_free})">
+                                    <span class="icon"><i class="fas fa-play-circle"></i></span>
+                                    <span>Ver Película</span>
+                                </button>
+                                ${!movie.is_free ? `
+                                <button class="button is-light is-large" onclick="addToCart(${movie.id}, '${movie.title}', '${movie.image_url}')">
+                                    <span class="icon"><i class="fas fa-shopping-cart"></i></span>
+                                    <span>Alquilar por $4.99</span>
+                                </button>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                console.error('Error al cargar detalles de la película:', error);
+                detailContainer.innerHTML = '<p class="has-text-danger has-text-centered">Error al cargar los detalles de la película.</p>';
+            });
+    });
+
+    function watchMovie(movieId, videoUrl, isFree) {
+        if (!isFree) {
+            alert('Este es contenido premium. Primero debes alquilarlo o iniciar sesión para acceder a tus compras.');
+            window.location.href = '/cart';
+            return;
+        }
+        window.location.href = `/player?id=${movieId}&url=${encodeURIComponent(videoUrl)}`;
+    }
+
+    function addToCart(movieId, title, imageUrl) {
+        fetch('/api/carrito/agregar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pelicula_id: movieId, titulo: title, image_url: imageUrl, precio: 4.99, cantidad: 1 })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert('Error al agregar al carrito: ' + data.error);
+            } else {
+                alert('Película añadida al carrito!');
+                window.location.href = '/cart';
+            }
+        })
+        .catch(error => console.error('Error al añadir al carrito:', error));
+    }
+</script>
+{{end}}

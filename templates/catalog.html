@@ -1,0 +1,96 @@
+{{define "title"}}Catálogo{{end}}
+
+{{define "content"}}
+<h1 class="title is-2 has-text-centered" style="color: #2E7D32;">Catálogo Completo</h1>
+
+<!-- Barra de búsqueda y filtros -->
+<div class="field is-grouped is-grouped-multiline mb-5">
+    <div class="control is-expanded">
+        <input class="input" type="text" id="searchInput" placeholder="Buscar por título o género..." onkeyup="filterMovies()" style="background-color: #FFFFFF; color: #212121; border-color: #A5D6A7;">
+    </div>
+    <div class="control">
+        <div class="select" style="background-color: #E8F5E9; border-color: #A5D6A7;">
+            <select id="genreFilter" onchange="filterMovies()" style="color: #2E7D32;">
+                <option value="">Todos los Géneros</option>
+                <option value="Drama">Drama</option>
+                <option value="Comedia dramática">Comedia Dramática</option>
+                <option value="Documental">Documental</option>
+            </select>
+        </div>
+    </div>
+    <div class="control">
+        <div class="select" style="background-color: #E8F5E9; border-color: #A5D6A7;">
+            <select id="yearFilter" onchange="filterMovies()" style="color: #2E7D32;">
+                <option value="">Todos los Años</option>
+                <option value="2016">2016</option>
+                <option value="2011">2011</option>
+                <option value="2006">2006</option>
+                <option value="1999">1999</option>
+                <option value="1990">1990</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Catálogo de películas -->
+<div id="movie-list" class="columns is-multiline is-mobile">
+    {{if .}}
+        {{range .}}
+        <div class="column is-one-quarter-desktop is-half-tablet is-full-mobile movie-card-item"
+             data-genre="{{.Genre}}" data-year="{{.Year}}" data-title="{{.Title | lower}}">
+            <div class="card" style="background-color: #D2B48C; color: #3E2723;"> <!-- Fondo marrón claro, texto marrón oscuro -->
+                <div class="card-image">
+                    <figure class="image is-3by4">
+                        <img src="{{.ImageURL}}" alt="{{.Title}}" onerror="this.onerror=null;this.src='/static/img/placeholder.jpg';">
+                    </figure>
+                </div>
+                <div class="card-content">
+                    <div class="media">
+                        <div class="media-content">
+                            <p class="title is-5" style="color: #4E342E;">{{.Title}}</p>
+                            <p class="subtitle is-6" style="color: #6D4C41;">{{.Genre}} ({{.Year}})</p>
+                        </div>
+                    </div>
+                    <div class="content">
+                        {{if .IsFree}}
+                            <span class="tag is-success is-light" style="background-color:#C8E6C9; color:#2E7D32;">Gratis</span>
+                        {{else}}
+                            <span class="tag is-warning is-light" style="background-color:#FFF9C4; color:#F57F17;">Premium</span>
+                        {{end}}
+                        <br>
+                        <a href="/movie-detail?id={{.ID}}" class="button is-info is-small is-fullwidth mt-3">Ver Detalles</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{end}}
+    {{else}}
+        <div class="column is-12 has-text-centered">
+            <p class="has-text-grey-light">No hay películas disponibles en el catálogo.</p>
+        </div>
+    {{end}}
+</div>
+
+<!-- Script de filtrado -->
+<script>
+    const allMovieCards = Array.from(document.querySelectorAll('.movie-card-item'));
+
+    function filterMovies() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const selectedGenre = document.getElementById('genreFilter').value;
+        const selectedYear = document.getElementById('yearFilter').value;
+
+        allMovieCards.forEach(card => {
+            const title = card.dataset.title;
+            const genre = card.dataset.genre;
+            const year = card.dataset.year;
+
+            const matchesSearch = title.includes(searchTerm) || genre.toLowerCase().includes(searchTerm);
+            const matchesGenre = selectedGenre === "" || genre === selectedGenre;
+            const matchesYear = selectedYear === "" || year === selectedYear;
+
+            card.style.display = (matchesSearch && matchesGenre && matchesYear) ? 'block' : 'none';
+        });
+    }
+</script>
+{{end}}

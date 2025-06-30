@@ -1,0 +1,115 @@
+{{define "title"}}Mi Carrito{{end}}
+
+{{define "content"}}
+    <h1 class="title is-2 has-text-centered" style="color: #4E342E;">Mi Carrito de Alquiler</h1>
+    <div id="cart-items" class="box" style="background-color: #D2B48C; color: #3E2723;">
+        <p class="has-text-centered" id="cart-loading-text" style="color: #5D4037;">Cargando carrito...</p>
+    </div>
+    <div class="box mt-4 has-text-right" style="background-color: #D2B48C; color: #3E2723;">
+        <h2 class="title is-3">Total: $<span id="cart-total">0.00</span></h2>
+        <div class="buttons is-justify-content-flex-end">
+            <button id="checkout-button" class="button is-danger is-light" onclick="checkoutCart()">
+                <span class="icon"><i class="fas fa-credit-card"></i></span>
+                <span>Pagar Ahora</span>
+            </button>
+            <button id="clear-cart-button" class="button is-danger is-outlined" onclick="clearCart()">
+                <span class="icon"><i class="fas fa-trash"></i></span>
+                <span>Vaciar Carrito</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', loadCart);
+
+        function loadCart() {
+            const cartItemsContainer = document.getElementById('cart-items');
+            const cartLoadingText = document.getElementById('cart-loading-text');
+            cartLoadingText.style.display = 'block';
+
+            fetch('/api/carrito')
+                .then(response => response.json())
+                .then(cart => {
+                    cartLoadingText.style.display = 'none';
+                    cartItemsContainer.innerHTML = ''; // Limpiar antes de renderizar
+
+                    if (cart.items && cart.items.length > 0) {
+                        cart.items.forEach(item => {
+                            const itemDiv = `
+                                <div class="card mb-3" style="background-color: #E6C9A8; color: #4E342E; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px;">
+                                    <div class="card-content">
+                                        <div class="media">
+                                            <div class="media-left">
+                                                <figure class="image is-96x96">
+                                                    <img src="${item.image_url}" alt="${item.titulo}">
+                                                </figure>
+                                            </div>
+                                            <div class="media-content">
+                                                <p class="title is-4">${item.titulo}</p>
+                                                <p class="subtitle is-6">Precio: $${item.precio.toFixed(2)}</p>
+                                            </div>
+                                            <div class="media-right">
+                                                <button class="button is-danger is-small is-outlined" onclick="removeFromCart(${item.pelicula_id})">
+                                                    <span class="icon"><i class="fas fa-times"></i></span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            cartItemsContainer.innerHTML += itemDiv;
+                        });
+                    } else {
+                        cartItemsContainer.innerHTML = '<p class="has-text-centered" style="color: #5D4037;">Tu carrito está vacío.</p>';
+                    }
+                    document.getElementById('cart-total').textContent = cart.total.toFixed(2);
+                })
+                .catch(error => {
+                    console.error('Error al cargar el carrito:', error);
+                    cartItemsContainer.innerHTML = '<p class="has-text-danger has-text-centered">Error al cargar el carrito.</p>';
+                });
+        }
+
+        function removeFromCart(movieId) {
+            fetch('/api/carrito/eliminar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pelicula_id: movieId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                } else {
+                    loadCart();
+                }
+            })
+            .catch(error => console.error('Error al eliminar del carrito:', error));
+        }
+
+        function clearCart() {
+            if (!confirm('¿Estás seguro de que quieres vaciar tu carrito?')) { return; }
+            fetch('/api/carrito/limpiar', { method: 'DELETE' })
+            .then(response => response.json())
+            .then(data => {
+                loadCart();
+            })
+            .catch(error => console.error('Error al vaciar el carrito:', error));
+        }
+
+        function checkoutCart() {
+            if (!confirm('¿Deseas confirmar tu compra?')) { return; }
+            fetch('/api/carrito/checkout', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Error en el checkout: ' + data.error);
+                } else {
+                    alert('¡Compra exitosa! ID de Orden: ' + data.id + '. Revisa tu cuenta para acceder a la película.');
+                    loadCart();
+                }
+            })
+            .catch(error => console.error('Error en el checkout:', error));
+        }
+    </script>
+{{end}}

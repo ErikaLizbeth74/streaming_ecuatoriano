@@ -1,0 +1,94 @@
+{{define "title"}}Registro{{end}}
+
+{{define "content"}}
+<div class="columns is-centered animated-content">
+    <div class="column is-one-third">
+        <div class="box" style="background-color: #E8F5E9; border: 1px solid #C8E6C9;">
+            <p class="title is-3 has-text-centered" style="color: #2E7D32;">Crear una Cuenta</p>
+    
+            <p class="has-text-centered mb-4" style="color: #555;">
+                Crea tu cuenta gratis y mantente al día con el mejor cine ecuatoriano.
+                Recibe alertas personalizadas sobre estrenos, documentales y películas que te encantarán.
+            </p>
+
+            <form id="register-form">
+                <div class="field">
+                    <label class="label" for="reg-username" style="color: #2E7D32;">Nombre de Usuario:</label>
+                    <div class="control">
+                        <input class="input" type="text" id="reg-username" name="username" required
+                               style="background-color: white; border-color: #A5D6A7; color: #212121;">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label" for="reg-email" style="color: #2E7D32;">Email:</label>
+                    <div class="control">
+                        <input class="input" type="email" id="reg-email" name="email" required
+                               style="background-color: white; border-color: #A5D6A7; color: #212121;">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label" for="reg-password" style="color: #2E7D32;">Contraseña:</label>
+                    <div class="control">
+                        <input class="input" type="password" id="reg-password" name="password" required
+                               style="background-color: white; border-color: #A5D6A7; color: #212121;">
+                    </div>
+                </div>
+
+                <div class="field mt-4">
+                    <div class="control">
+                        <button type="submit" class="button is-primary is-fullwidth">Registrarse</button>
+                    </div>
+                </div>
+
+                <p class="has-text-centered mt-3" style="color: #555;">
+                    ¿Ya tienes cuenta? <a href="/login" style="color: #388E3C;">Inicia sesión aquí</a>
+                </p>
+
+                <div id="register-message" class="notification is-light is-hidden mt-3"></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('register-form');
+    const messageDiv = document.getElementById('register-message');
+
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const username = document.getElementById('reg-username').value.trim();
+        const email = document.getElementById('reg-email').value.trim();
+        const password = document.getElementById('reg-password').value.trim();
+
+        fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, password })
+        })
+        .then(res => res.json())
+        .then(data => {
+            messageDiv.classList.remove('is-hidden', 'is-danger', 'is-success');
+            if (data.error) {
+                messageDiv.textContent = data.error;
+                messageDiv.classList.add('is-danger');
+            } else {
+                messageDiv.textContent = data.message + '. Redirigiendo al inicio de sesión...';
+                messageDiv.classList.add('is-success');
+                form.reset();
+                setTimeout(() => { window.location.href = '/login'; }, 2000);
+            }
+        })
+        .catch(err => {
+            messageDiv.classList.remove('is-hidden');
+            messageDiv.textContent = 'Error de red. Intenta de nuevo.';
+            messageDiv.classList.add('is-danger');
+            console.error(err);
+        });
+    });
+});
+</script>
+{{end}}

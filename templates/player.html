@@ -1,0 +1,54 @@
+{{define "title"}}Reproductor{{end}}
+
+{{define "content"}}
+    <div class="box has-background-grey-darker has-text-centered">
+        <h1 id="player-title" class="title is-2 has-text-danger">Cargando película...</h1>
+        <div class="video-wrapper">
+            <iframe id="video-player"
+                    src=""
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen>
+            </iframe>
+        </div>
+        <p class="subtitle is-5 has-text-grey-light mt-4" id="video-info"></p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const movieId = urlParams.get('id');
+            const videoUrl = urlParams.get('url');
+
+            const playerTitle = document.getElementById('player-title');
+            const videoPlayer = document.getElementById('video-player');
+            const videoInfo = document.getElementById('video-info');
+
+            if (!movieId || !videoUrl) {
+                playerTitle.textContent = 'Error: No se encontró la película.';
+                videoInfo.textContent = 'Asegúrate de haber seleccionado una película válida.';
+                return;
+            }
+
+            const decodedVideoUrl = decodeURIComponent(videoUrl);
+            videoPlayer.src = decodedVideoUrl;
+
+            fetch(`/api/peliculas/${movieId}`)
+                .then(response => response.json())
+                .then(movie => {
+                    if (movie.message === "Película no encontrada" || movie.error) {
+                        playerTitle.textContent = 'Película no encontrada.';
+                        videoInfo.textContent = 'No se pudieron cargar los detalles de la película.';
+                    } else {
+                        playerTitle.textContent = movie.title;
+                        videoInfo.textContent = `Género: ${movie.genre}, Año: ${movie.year}`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al obtener detalles de la película para el reproductor:', error);
+                    playerTitle.textContent = 'Error al cargar el título.';
+                    videoInfo.textContent = 'No se pudieron cargar los detalles adicionales.';
+                });
+        });
+    </script>
+{{end}}

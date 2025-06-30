@@ -1,0 +1,68 @@
+{{define "title"}}Iniciar Sesión{{end}}
+
+{{define "content"}}
+<div class="columns is-centered animated-content">
+    <div class="column is-one-third">
+        <div class="box" style="background-color: #E8F5E9; border-color: #C8E6C9;">
+            <p class="title is-3 has-text-centered" style="color: #2E7D32;">Iniciar Sesión</p>
+            <form id="login-form">
+                <div class="field">
+                    <label class="label" for="username" style="color: #2E7D32;">Nombre de Usuario:</label>
+                    <div class="control">
+                        <input class="input" type="text" id="username" name="username" required style="background-color: white; border-color: #A5D6A7; color: #212121;">
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label" for="password" style="color: #2E7D32;">Contraseña:</label>
+                    <div class="control">
+                        <input class="input" type="password" id="password" name="password" required style="background-color: white; border-color: #A5D6A7; color: #212121;">
+                    </div>
+                </div>
+                <div class="field mt-5">
+                    <div class="control">
+                        <button type="submit" class="button is-primary is-fullwidth">Entrar</button>
+                    </div>
+                </div>
+                <p class="has-text-centered mt-3" style="color: #555;">
+                    ¿No tienes cuenta? <a href="/register" style="color: #388E3C;">Regístrate aquí</a>
+                </p>
+                <div id="login-message" class="notification is-light is-hidden mt-3"></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('login-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const messageDiv = document.getElementById('login-message');
+
+        fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        })
+        .then(response => response.json())
+        .then(data => {
+            messageDiv.classList.remove('is-hidden', 'is-danger', 'is-success');
+            if (data.error) {
+                messageDiv.textContent = data.error;
+                messageDiv.classList.add('is-danger');
+            } else {
+                messageDiv.textContent = data.message + '. Redirigiendo...';
+                messageDiv.classList.add('is-success');
+                setTimeout(() => { window.location.href = '/catalog'; }, 1500);
+            }
+        })
+        .catch(error => {
+            console.error('Error de red:', error);
+            messageDiv.classList.remove('is-hidden');
+            messageDiv.textContent = 'Error de conexión. Intenta de nuevo.';
+            messageDiv.classList.add('is-danger');
+        });
+    });
+</script>
+{{end}}
+     

@@ -1,0 +1,82 @@
+{{define "title"}}Inicio{{end}}
+
+{{define "content"}}
+<section class="hero is-medium is-dark is-bold animated-content">
+    <div class="hero-body">
+        <div class="container has-text-centered">
+            <p class="subtitle is-3 has-text-light mb-4">
+                Bienvenido a Mi Streaming de películas Ecuatorianas 🇪🇨
+            </p>
+            <p class="title is-size-1 has-text-white has-text-weight-bold">
+                Cine Ecuatoriano al alcance de todos 🎞️
+            </p>
+            <p class="subtitle is-size-4 has-text-light">
+                "Descubre historias únicas. Sumergete en nuestra cultura 🛤️"
+            </p>
+            <a href="/catalog" class="button is-primary is-large mt-5">Explorar Catálogo</a>
+        </div>
+    </div>
+</section>
+
+<section class="section animated-content">
+    <h2 class="title is-3 has-text-centered" style="color: #212121;">Películas Destacadas</h2>
+    <div id="featured-list" class="columns is-multiline is-mobile">
+        <div class="column is-12 has-text-centered">
+            <p class="has-text-grey-light">Cargando películas destacadas...</p>
+        </div>
+    </div>
+</section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        fetch('/api/destacados')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(movies => {
+                const featuredList = document.getElementById('featured-list');
+                featuredList.innerHTML = '';
+                if (movies.length === 0) {
+                    featuredList.innerHTML = '<div class="column is-12 has-text-centered"><p class="has-text-grey-light">No hay películas destacadas disponibles.</p></div>';
+                    return;
+                }
+                movies.forEach(movie => {
+                    const movieCard = `
+                        <div class="column is-one-quarter-desktop is-half-tablet is-full-mobile">
+                            <div class="card" style="background-color: #388E3C; color: white;">
+                                <div class="card-image">
+                                    <figure class="image is-3by4">
+                                        <img src="${movie.image_url}" alt="${movie.title}" onerror="this.onerror=null;this.src='/static/img/placeholder.jpg';">
+                                    </figure>
+                                </div>
+                                <div class="card-content">
+                                    <div class="media">
+                                        <div class="media-content">
+                                            <p class="title is-5 has-text-white">${movie.title}</p>
+                                            <p class="subtitle is-6" style="color: #C8E6C9;">${movie.genre} (${movie.year})</p>
+                                        </div>
+                                    </div>
+                                    <div class="content">
+                                        ${movie.is_free ? 
+                                            '<span class="tag is-success is-light" style="background-color:#C8E6C9; color:#2E7D32;">Gratis</span>' : 
+                                            '<span class="tag is-warning is-light" style="background-color:#FFF9C4; color:#F57F17;">Premium</span>'}
+                                        <br>
+                                        <a href="/movie-detail?id=${movie.id}" class="button is-info is-small is-fullwidth mt-3">Ver Detalles</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    featuredList.innerHTML += movieCard;
+                });
+            })
+            .catch(error => {
+                console.error('Error al cargar destacadas:', error);
+                document.getElementById('featured-list').innerHTML = '<div class="column is-12 has-text-centered"><p class="has-text-danger">Error al cargar películas destacadas.</p></div>';
+            });
+    });
+</script>
+{{end}}
