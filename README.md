@@ -1,3 +1,4 @@
+Nombre: Erika Vinocunga
 Cine Ecuatoriano 🇪🇨
 Una plataforma de streaming de películas y documentales ecuatorianos, construida con Go (Golang) en el backend y un frontend dinámico con HTML, CSS y JavaScript. Este proyecto demuestra una arquitectura web completa con persistencia de datos usando SQLite y comunicación JSON.
 1. Descripción del Proyecto
